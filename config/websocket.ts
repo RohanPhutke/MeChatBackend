@@ -18,9 +18,10 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const server = http.createServer();
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
-    credentials:true,
+    allowedHeaders: ["my-custom-header"],
+    credentials: true
   },
 });
 
