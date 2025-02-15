@@ -2,8 +2,8 @@ import { Server } from "ws";
 import jwt from "jsonwebtoken";
 
 export default (strapi: any) => {
-
-  if (process.env.BUILD_MODE === "true") {
+  console.log("Process env : ",process.env.BUILD_MODE);
+  if (process.env.BUILD_MODE) {
     console.log("Skipping WebSocket initialization during build.");
     return;
   }
