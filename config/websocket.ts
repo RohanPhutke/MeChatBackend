@@ -1,44 +1,65 @@
-import { Server } from "ws";
+import { Server } from "socket.io";
+import http from "http";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 
-export default (strapi: any) => {
-  console.log("Process env : ",process.env.BUILD_MODE);
-  if (process.env.BUILD_MODE) {
-    console.log("Skipping WebSocket initialization during build.");
-    return;
-  }
+dotenv.config();
 
-  const host = process.env.WS_HOST || "localhost"; 
-  const port = process.env.WS_PORT || 8080; 
+console.log("Process env : ", process.env.BUILD_MODE);
 
-  const wss = new Server({ port });
+if (process.env.BUILD_MODE) {
+  console.log("Skipping WebSocket initialization during build.");
+  process.exit(0);
+}
 
-  wss.on("connection", (ws, req) => {
+const PORT = process.env.SOCKET_PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+
+const server = http.createServer();
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("New WebSocket connection");
+
+  socket.on("authenticate", (token) => {
     try {
-      
-      const url = new URL(req.url!, `http://${req.headers.host}`);
-      const token = url.searchParams.get("token");
-
-      if (!token) {
-        console.log("⛔ No token provided!");
-        ws.close();
-        return;
-      }
-
-      const jwtSecret = process.env.JWT_SECRET;
-
-      const decoded = jwt.verify(token, jwtSecret);
+      const decoded = jwt.verify(token, JWT_SECRET);
       console.log("User authenticated:", decoded);
 
-      ws.on("message", (message: string) => {
-        console.log(`Received: ${message}`);
-        ws.send(`Echo: ${message}`);
+      socket.emit("authenticated", { message: "Authentication successful!" });
+
+      socket.on("message", (data) => {
+        try {
+          const parsedData = JSON.parse(data);
+          console.log("Parsed message received:", parsedData);
+
+          const botResponse = {
+            text: `${parsedData.text}`,
+            sender: "bot",
+          };
+
+          socket.emit("message", JSON.stringify(botResponse));
+        } catch (error) {
+          console.error("Error parsing incoming message:", error);
+        }
       });
     } catch (error) {
       console.log("Invalid Token:", error.message);
-      ws.close();
+      socket.emit("unauthorized", { error: "Invalid token" });
+      socket.disconnect();
     }
   });
 
-  console.log(`!WebSocket running at ws://${host}:${port}`);
-};
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`WebSocket server running on port ${PORT}`);
+});
