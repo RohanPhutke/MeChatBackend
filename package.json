@@ -5,7 +5,7 @@
   "description": "A Strapi application",
   "scripts": {
     "build": "export NODE_ENV=production && export BUILD_MODE=true && strapi build",
-    "start": "export NODE_ENV=production && export BUILD_MODE=false && strapi start",
+    "start": "export NODE_ENV=production && export BUILD_MODE=false && strapi start & node socketServer.js",
     "develop": "strapi develop",
     "strapi": "strapi"
   },
@@ -14,9 +14,11 @@
     "@strapi/plugin-users-permissions": "5.10.2",
     "@strapi/strapi": "5.10.2",
     "better-sqlite3": "11.3.0",
+    "nodemon": "^3.1.9",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0",
+    "socket.io": "^4.8.1",
     "styled-components": "^6.0.0"
   },
   "devDependencies": {
