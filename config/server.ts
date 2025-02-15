@@ -4,8 +4,4 @@ export default ({ env }: { env: any }) => ({
   app: {
     keys: env.array("APP_KEYS"),
   },
-  afterStartup: async (strapi: any) => {
-    console.log("Initializing WebSocket server...");
-    require("../config/websocket").default(strapi);
-  },
 });

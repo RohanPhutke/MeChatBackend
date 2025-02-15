@@ -2,10 +2,16 @@ import { Server } from "ws";
 import jwt from "jsonwebtoken";
 
 export default (strapi: any) => {
-  const host = process.env.WS_HOST || "localhost"; 
-  const port = process.env.WS_PORT || 8082; 
 
-  const wss = new Server({ host, port });
+  if (process.env.BUILD_MODE === "true") {
+    console.log("Skipping WebSocket initialization during build.");
+    return;
+  }
+
+  const host = process.env.WS_HOST || "localhost"; 
+  const port = process.env.WS_PORT || 8080; 
+
+  const wss = new Server({ port });
 
   wss.on("connection", (ws, req) => {
     try {
@@ -22,18 +28,17 @@ export default (strapi: any) => {
       const jwtSecret = process.env.JWT_SECRET;
 
       const decoded = jwt.verify(token, jwtSecret);
-      console.log("✅ User authenticated:", decoded);
+      console.log("User authenticated:", decoded);
 
       ws.on("message", (message: string) => {
-        console.log("here I am !");
-        console.log(`💬 Received: ${message}`);
+        console.log(`Received: ${message}`);
         ws.send(`Echo: ${message}`);
       });
     } catch (error) {
-      console.log("❌ Invalid Token:", error.message);
+      console.log("Invalid Token:", error.message);
       ws.close();
     }
   });
 
-  console.log(`🚀 WebSocket running at ws://${host}:${port}`);
+  console.log(`!WebSocket running at ws://${host}:${port}`);
 };
